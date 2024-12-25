@@ -18,13 +18,13 @@
             try {
                 // تحقق من الرابط
                 if (!manifestUrl) {
-                    confirm('فشل: رابط manifest غير متوفر.');
+                    alert('فشل: رابط manifest غير متوفر.');
                     return;
                 }
-                confirm('الخطوة 1: رابط manifest متوفر.');
+                alert('الخطوة 1: رابط manifest متوفر.');
 
                 // إرسال الطلب
-                confirm('الخطوة 2: يتم الآن إرسال الطلب إلى الرابط...');
+                alert('الخطوة 2: يتم الآن إرسال الطلب إلى الرابط...');
                 const response = await fetch(manifestUrl, {
                     method: 'GET',
                     headers: {
@@ -34,26 +34,26 @@
                 });
 
                 if (!response.ok) {
-                    confirm(`فشل: الطلب لم ينجح. رمز الحالة: ${response.status}`);
+                    alert(`فشل: الطلب لم ينجح. رمز الحالة: ${response.status}`);
                     return;
                 }
-                confirm('الخطوة 3: الطلب نجح. تم الحصول على الاستجابة.');
+                alert('الخطوة 3: الطلب نجح. تم الحصول على الاستجابة.');
 
                 // الحصول على النص المشفر والترويسة
                 const encryptedText = await response.text();
                 const headerT = response.headers.get('t');
                 if (!headerT) {
-                    confirm('فشل: الترويسة "t" غير موجودة في الاستجابة.');
+                    alert('فشل: الترويسة "t" غير موجودة في الاستجابة.');
                     return;
                 }
-                confirm('الخطوة 4: الترويسة "t" متوفرة.');
+                alert('الخطوة 4: الترويسة "t" متوفرة.');
 
                 // بناء المفتاح
                 const key = "c!xZj+N9&G@Ev@vw" + headerT;
-                confirm('الخطوة 5: المفتاح تم إنشاؤه بنجاح.');
+                alert('الخطوة 5: المفتاح تم إنشاؤه بنجاح.');
 
                 // فك التشفير باستخدام XOR
-                confirm('الخطوة 6: يتم الآن فك التشفير...');
+                alert('الخطوة 6: يتم الآن فك التشفير...');
                 const decodedBytes = atob(encryptedText); // فك تشفير Base64
                 const resultBytes = new Uint8Array(decodedBytes.length);
                 for (let i = 0; i < decodedBytes.length; i++) {
@@ -62,19 +62,23 @@
 
                 // تحويل النص المفكوك إلى صيغة نصية
                 const decryptedText = new TextDecoder().decode(resultBytes);
-                confirm('الخطوة 7: فك التشفير تم بنجاح.');
+                alert('الخطوة 7: فك التشفير تم بنجاح.');
 
                 // عرض النص المفكوك
-                confirm(`النص المفكوك (JSON):\n${decryptedText}`);
+                alert(`النص المفكوك (JSON):\n${decryptedText}`);
             } catch (error) {
-                confirm(`خطأ أثناء المعالجة: ${error.message}`);
+                alert(`خطأ أثناء المعالجة: ${error.message}`);
             }
         }
 
         // تشغيل العملية عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
             const { manifest } = getQueryParams();
-            fetchAndDecrypt(manifest);
+            if (manifest) {
+                fetchAndDecrypt(manifest);
+            } else {
+                alert('رابط manifest غير متوفر.');
+            }
         });
     </script>
 </body>
