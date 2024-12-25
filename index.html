@@ -50,7 +50,7 @@
             };
         }
 
-        async function fetchDecryptedUrl(manifest) {
+        async function fetchDecryptedJson(manifest) {
             try {
                 // إعداد الطلب
                 const response = await fetch(manifest, {
@@ -72,19 +72,13 @@
                     resultBytes[i] = decodedBytes.charCodeAt(i) ^ key.charCodeAt(i % key.length);
                 }
 
-                // تحويل النص إلى صيغة JSON أو نص
-                const decryptedText = new TextDecoder().decode(resultBytes).replace(/\\\//g, "/");
+                // تحويل النص إلى نص JSON
+                const decryptedText = new TextDecoder().decode(resultBytes);
 
-                // البحث عن الرابط بصيغة m3u8
-                const m3u8Match = decryptedText.match(/"([^"]*\.m3u8)"/);
-                if (m3u8Match) {
-                    const m3u8Url = m3u8Match[1];
-                    alert(`تم استخراج رابط m3u8: ${m3u8Url}`); // عرض الرابط في رسالة
-                    return m3u8Url; // الرابط المستخرج
-                } else {
-                    alert("لم يتم العثور على رابط m3u8.");
-                    return null;
-                }
+                // عرض النص المفكوك في رسالة
+                alert(`النص المفكوك (JSON):\n${decryptedText}`);
+
+                return decryptedText; // إرجاع النص المفكوك
             } catch (error) {
                 alert(`خطأ أثناء فك التشفير: ${error.message}`);
                 return null;
@@ -99,29 +93,8 @@
                 return;
             }
 
-            // تنفيذ الطلب وفك التشفير للحصول على الرابط
-            const m3u8Url = await fetchDecryptedUrl(manifest);
-            if (m3u8Url) {
-                console.log("تم استخراج رابط m3u8:", m3u8Url);
-
-                // تشغيل الفيديو باستخدام JW Player
-                const player = jwplayer("jwplayerDiv").setup({
-                    file: m3u8Url,
-                    width: "100%",
-                    height: "100%",
-                    type: "hls",
-                    autostart: true,
-                    skin: {
-                        name: "glow"
-                    }
-                });
-
-                player.on('ready', () => {
-                    player.setFullscreen(true);
-                });
-            } else {
-                alert("تعذر استخراج رابط المشاهدة.");
-            }
+            // تنفيذ الطلب وفك التشفير
+            await fetchDecryptedJson(manifest);
         });
     </script>
 </body>
