@@ -97,6 +97,7 @@
         // تشغيل العملية عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
             const { manifest } = getQueryParams();
+            alert(`رابط manifest: ${manifest}`); // عرض الرابط للمراجعة
             if (manifest) {
                 fetchAndDecrypt(manifest);
             } else {
