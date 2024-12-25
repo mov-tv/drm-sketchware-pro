@@ -43,20 +43,28 @@
 
                 // الحصول على النص المشفر والترويسة
                 const encryptedText = await response.text();
+                alert('الخطوة 4: تم الحصول على النص المشفر.');
+
+                // الحصول على الترويسة "t"
                 const headerT = response.headers.get('t');
                 if (!headerT) {
                     alert('فشل: الترويسة "t" غير موجودة في الاستجابة.');
                     return;
                 }
-                alert('الخطوة 4: الترويسة "t" متوفرة.');
+                alert('الخطوة 5: الترويسة "t" متوفرة.');
 
                 // بناء المفتاح باستخدام الترويسة
                 const key = "c!xZj+N9&G@Ev@vw" + headerT;
-                alert('الخطوة 5: المفتاح تم إنشاؤه بنجاح.');
+                alert('الخطوة 6: المفتاح تم إنشاؤه بنجاح.');
 
                 // فك التشفير باستخدام XOR
-                alert('الخطوة 6: يتم الآن فك التشفير...');
+                alert('الخطوة 7: يتم الآن فك التشفير...');
                 const decodedBytes = atob(encryptedText); // فك تشفير Base64
+                if (!decodedBytes) {
+                    alert('فشل: لا يمكن فك تشفير النص المشفر.');
+                    return;
+                }
+
                 const resultBytes = new Uint8Array(decodedBytes.length);
                 for (let i = 0; i < decodedBytes.length; i++) {
                     resultBytes[i] = decodedBytes.charCodeAt(i) ^ key.charCodeAt(i % key.length);
@@ -64,7 +72,7 @@
 
                 // تحويل النص المفكوك إلى صيغة نصية
                 const decryptedText = new TextDecoder().decode(resultBytes);
-                alert('الخطوة 7: فك التشفير تم بنجاح.');
+                alert('الخطوة 8: فك التشفير تم بنجاح.');
 
                 // عرض النص المفكوك في مربع نص قابل للنسخ
                 const textArea = document.createElement('textarea');
@@ -80,6 +88,7 @@
                     alert('تم نسخ النص!');
                 };
                 document.body.appendChild(copyButton);
+
             } catch (error) {
                 alert(`خطأ أثناء المعالجة: ${error.message}`);
             }
