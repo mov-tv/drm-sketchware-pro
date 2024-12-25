@@ -7,11 +7,11 @@
 </head>
 <body>
     <script>
-        // استخراج المعلمات من الرابط
+        // استخراج المعلمات من الرابط باستخدام URLSearchParams
         function getQueryParams() {
             const params = new URLSearchParams(window.location.search);
             return {
-                manifest: params.get('manifest')
+                manifest: params.get('manifest')  // استخراج المعامل "manifest"
             };
         }
 
