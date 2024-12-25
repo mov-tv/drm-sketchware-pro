@@ -2,45 +2,9 @@
 <html>
 <head>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <title>Shaka Player with JW Design</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.compiled.js"></script>
-    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
-
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        #video-container {
-            width: 80%;
-            max-width: 1280px;
-            aspect-ratio: 16 / 9;
-            background: #000;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
-        }
-
-        #jwplayerDiv {
-            width: 100%;
-            height: 100%;
-        }
-
-        .jw-icon-fullscreen {
-            display: none !important;
-        }
-    </style>
+    <title>Test Decryption</title>
 </head>
 <body>
-    <div id="video-container">
-        <div id="jwplayerDiv"></div>
-    </div>
-
     <script>
         // استخراج المعلمات من الرابط
         function getQueryParams() {
@@ -50,10 +14,18 @@
             };
         }
 
-        async function fetchDecryptedJson(manifest) {
+        async function fetchAndDecrypt(manifestUrl) {
             try {
-                // إعداد الطلب
-                const response = await fetch(manifest, {
+                // تحقق من الرابط
+                if (!manifestUrl) {
+                    alert('فشل: رابط manifest غير متوفر.');
+                    return;
+                }
+                alert('الخطوة 1: رابط manifest متوفر.');
+
+                // إرسال الطلب
+                alert('الخطوة 2: يتم الآن إرسال الطلب إلى الرابط...');
+                const response = await fetch(manifestUrl, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -61,40 +33,48 @@
                     }
                 });
 
+                if (!response.ok) {
+                    alert(`فشل: الطلب لم ينجح. رمز الحالة: ${response.status}`);
+                    return;
+                }
+                alert('الخطوة 3: الطلب نجح. تم الحصول على الاستجابة.');
+
+                // الحصول على النص المشفر والترويسة
                 const encryptedText = await response.text();
-                const key = "c!xZj+N9&G@Ev@vw" + response.headers.get('t');
+                const headerT = response.headers.get('t');
+                if (!headerT) {
+                    alert('فشل: الترويسة "t" غير موجودة في الاستجابة.');
+                    return;
+                }
+                alert('الخطوة 4: الترويسة "t" متوفرة.');
 
-                // فك التشفير
-                let decodedBytes = atob(encryptedText);
+                // بناء المفتاح
+                const key = "c!xZj+N9&G@Ev@vw" + headerT;
+                alert('الخطوة 5: المفتاح تم إنشاؤه بنجاح.');
+
+                // فك التشفير باستخدام XOR
+                alert('الخطوة 6: يتم الآن فك التشفير...');
+                const decodedBytes = atob(encryptedText); // فك تشفير Base64
                 const resultBytes = new Uint8Array(decodedBytes.length);
-
                 for (let i = 0; i < decodedBytes.length; i++) {
                     resultBytes[i] = decodedBytes.charCodeAt(i) ^ key.charCodeAt(i % key.length);
                 }
 
-                // تحويل النص إلى نص JSON
+                // تحويل النص المفكوك إلى صيغة نصية
                 const decryptedText = new TextDecoder().decode(resultBytes);
+                alert('الخطوة 7: فك التشفير تم بنجاح.');
 
-                // عرض النص المفكوك في رسالة
+                // عرض النص المفكوك
                 alert(`النص المفكوك (JSON):\n${decryptedText}`);
-
-                return decryptedText; // إرجاع النص المفكوك
             } catch (error) {
-                alert(`خطأ أثناء فك التشفير: ${error.message}`);
-                return null;
+                alert(`خطأ أثناء المعالجة: ${error.message}`);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // تشغيل العملية عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
             const { manifest } = getQueryParams();
-
-            if (!manifest) {
-                alert('المعلمة manifest مطلوبة.');
-                return;
-            }
-
-            // تنفيذ الطلب وفك التشفير
-            await fetchDecryptedJson(manifest);
+            fetchAndDecrypt(manifest);
         });
     </script>
 </body>
