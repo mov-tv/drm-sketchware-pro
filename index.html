@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
+    <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
     <title>Test Decryption</title>
 </head>
@@ -23,7 +24,7 @@
                 }
                 alert('الخطوة 1: رابط manifest متوفر.');
 
-                // إرسال الطلب
+                // إرسال الطلب مع الرؤوس المطلوبة
                 alert('الخطوة 2: يتم الآن إرسال الطلب إلى الرابط...');
                 const response = await fetch(manifestUrl, {
                     method: 'GET',
@@ -33,6 +34,7 @@
                     }
                 });
 
+                // تحقق من نجاح الطلب
                 if (!response.ok) {
                     alert(`فشل: الطلب لم ينجح. رمز الحالة: ${response.status}`);
                     return;
@@ -48,7 +50,7 @@
                 }
                 alert('الخطوة 4: الترويسة "t" متوفرة.');
 
-                // بناء المفتاح
+                // بناء المفتاح باستخدام الترويسة
                 const key = "c!xZj+N9&G@Ev@vw" + headerT;
                 alert('الخطوة 5: المفتاح تم إنشاؤه بنجاح.');
 
@@ -64,8 +66,20 @@
                 const decryptedText = new TextDecoder().decode(resultBytes);
                 alert('الخطوة 7: فك التشفير تم بنجاح.');
 
-                // عرض النص المفكوك
-                alert(`النص المفكوك (JSON):\n${decryptedText}`);
+                // عرض النص المفكوك في مربع نص قابل للنسخ
+                const textArea = document.createElement('textarea');
+                textArea.value = decryptedText;
+                document.body.appendChild(textArea);
+
+                // إضافة زر نسخ النص
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'نسخ النص المفكوك';
+                copyButton.onclick = () => {
+                    textArea.select();
+                    document.execCommand('copy');
+                    alert('تم نسخ النص!');
+                };
+                document.body.appendChild(copyButton);
             } catch (error) {
                 alert(`خطأ أثناء المعالجة: ${error.message}`);
             }
