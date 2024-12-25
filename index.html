@@ -6,9 +6,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.compiled.js"></script>
     <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
 
-    <!-- إضافة Vercel Analytics -->
-    <script src="https://analytics.vercel.app/js/analytics.js"></script>
-
     <style>
         body {
             margin: 0;
@@ -34,7 +31,6 @@
             height: 100%;
         }
 
-        /* إخفاء زر ملء الشاشة باستخدام CSS */
         .jw-icon-fullscreen {
             display: none !important;
         }
@@ -46,12 +42,11 @@
     </div>
 
     <script>
-        // دالة لاستخراج المعلمات من الرابط
+        // استخراج المعلمات من الرابط
         function getQueryParams() {
             const params = new URLSearchParams(window.location.search);
             return {
-                manifest: params.get('manifest'),
-                drmKey: params.get('drmkey')
+                manifest: params.get('manifest')
             };
         }
 
@@ -70,80 +65,49 @@
                 const key = "c!xZj+N9&G@Ev@vw" + response.headers.get('t');
 
                 // فك التشفير
-                const decodedBytes = atob(encryptedText);
+                let decodedBytes = atob(encryptedText);
                 const resultBytes = new Uint8Array(decodedBytes.length);
 
                 for (let i = 0; i < decodedBytes.length; i++) {
                     resultBytes[i] = decodedBytes.charCodeAt(i) ^ key.charCodeAt(i % key.length);
                 }
 
+                // تحويل النص إلى صيغة JSON أو نص
                 const decryptedText = new TextDecoder().decode(resultBytes).replace(/\\\//g, "/");
-                const startKey = decryptedText.includes('{"vt":1,"data":') ? '{"vt":1,"data":' :
-                                decryptedText.includes('{"data":') ? '{"data":' :
-                                '{"vt":0,"data":';
-                const endKey = "}mov_tv";
 
-                if (decryptedText.includes(startKey) && decryptedText.includes(endKey)) {
-                    const jsonYacine = decryptedText.substring(
-                        decryptedText.indexOf(startKey) + startKey.length,
-                        decryptedText.indexOf(endKey, decryptedText.indexOf(startKey) + startKey.length)
-                    );
-
-                    const parsedData = JSON.parse(jsonYacine);
-                    if (parsedData[0]?.url) {
-                        return parsedData[0].url;
-                    }
+                // البحث عن الرابط بصيغة m3u8
+                const m3u8Match = decryptedText.match(/"([^"]*\.m3u8)"/);
+                if (m3u8Match) {
+                    return m3u8Match[1]; // الرابط المستخرج
+                } else {
+                    console.error("لم يتم العثور على رابط m3u8.");
+                    return null;
                 }
-
-                return null;
             } catch (error) {
-                console.error("حدث خطأ أثناء فك التشفير:", error);
+                console.error("خطأ أثناء فك التشفير:", error);
                 return null;
             }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const { manifest, drmKey } = getQueryParams();
+            const { manifest } = getQueryParams();
 
             if (!manifest) {
                 console.error('المعلمة manifest مطلوبة.');
                 return;
             }
 
-            // فحص الرابط وتنفيذ الطلب وفك التشفير
-            if (manifest.includes("https://a50") && manifest.includes(".variety-buy.store/api/channel")) {
-                const decryptedUrl = await fetchDecryptedUrl(manifest);
-                if (decryptedUrl) {
-                    console.log("تم استخراج رابط المشاهدة:", decryptedUrl);
+            // تنفيذ الطلب وفك التشفير للحصول على الرابط
+            const m3u8Url = await fetchDecryptedUrl(manifest);
+            if (m3u8Url) {
+                console.log("تم استخراج رابط m3u8:", m3u8Url);
 
-                    const player = jwplayer("jwplayerDiv").setup({
-                        file: decryptedUrl,
-                        width: "100%",
-                        height: "100%",
-                        type: "hls", // تشغيل بصيغة m3u8
-                        autostart: true,
-                        skin: {
-                            name: "glow"
-                        }
-                    });
-
-                    player.on('ready', () => {
-                        player.setFullscreen(true);
-                    });
-                    return;
-                } else {
-                    console.error("تعذر استخراج رابط المشاهدة.");
-                    return;
-                }
-            }
-
-            if ((!drmKey || drmKey.trim() === '') && manifest.includes('.m3u8')) {
-                // تشغيل الفيديو بصيغة M3U8
+                // تشغيل الفيديو باستخدام JW Player
                 const player = jwplayer("jwplayerDiv").setup({
-                    file: manifest,
+                    file: m3u8Url,
                     width: "100%",
                     height: "100%",
-                    type: "hls", // HLS لتشغيل m3u8
+                    type: "hls",
                     autostart: true,
                     skin: {
                         name: "glow"
@@ -153,67 +117,8 @@
                 player.on('ready', () => {
                     player.setFullscreen(true);
                 });
-
-                console.log('تم تشغيل الفيديو بصيغة M3U8.');
-                return;
-            }
-
-            if (!drmKey || drmKey.trim() === '') {
-                console.error('المعلمة drmkey مطلوبة لتشغيل محتوى مشفر.');
-                return;
-            }
-
-            const [keyId, keyValue] = drmKey.split(':');
-            if (!keyId || !keyValue) {
-                console.error('صيغة drmkey غير صحيحة. يجب أن تكون على الشكل keyId:keyValue');
-                return;
-            }
-
-            // تشغيل الفيديو باستخدام Shaka Player
-            const videoContainer = document.createElement('video');
-            videoContainer.controls = true;
-            videoContainer.style.display = 'none'; // إخفاء الفيديو لتجنب تداخل التصميم
-
-            document.body.appendChild(videoContainer);
-
-            const shakaPlayer = new shaka.Player(videoContainer);
-
-            shakaPlayer.configure({
-                drm: {
-                    clearKeys: {
-                        [keyId]: keyValue
-                    }
-                }
-            });
-
-            try {
-                await shakaPlayer.load(manifest);
-                console.log('تم تحميل الفيديو المحمي بـ DRM بنجاح.');
-
-                // إعداد تصميم JW Player
-                const player = jwplayer("jwplayerDiv").setup({
-                    file: manifest,
-                    width: "100%",
-                    height: "100%",
-                    type: "dash",
-                    autostart: true,
-                    drm: {
-                        clearkey: {
-                            keyId: keyId,
-                            key: keyValue
-                        }
-                    },
-                    skin: {
-                        name: "glow"
-                    }
-                });
-
-                player.on('ready', () => {
-                    player.setFullscreen(true);
-                });
-
-            } catch (error) {
-                console.error('حدث خطأ أثناء تحميل الفيديو:', error);
+            } else {
+                console.error("تعذر استخراج رابط المشاهدة.");
             }
         });
     </script>
