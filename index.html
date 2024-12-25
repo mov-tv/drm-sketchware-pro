@@ -78,13 +78,15 @@
                 // البحث عن الرابط بصيغة m3u8
                 const m3u8Match = decryptedText.match(/"([^"]*\.m3u8)"/);
                 if (m3u8Match) {
-                    return m3u8Match[1]; // الرابط المستخرج
+                    const m3u8Url = m3u8Match[1];
+                    alert(`تم استخراج رابط m3u8: ${m3u8Url}`); // عرض الرابط في رسالة
+                    return m3u8Url; // الرابط المستخرج
                 } else {
-                    console.error("لم يتم العثور على رابط m3u8.");
+                    alert("لم يتم العثور على رابط m3u8.");
                     return null;
                 }
             } catch (error) {
-                console.error("خطأ أثناء فك التشفير:", error);
+                alert(`خطأ أثناء فك التشفير: ${error.message}`);
                 return null;
             }
         }
@@ -93,7 +95,7 @@
             const { manifest } = getQueryParams();
 
             if (!manifest) {
-                console.error('المعلمة manifest مطلوبة.');
+                alert('المعلمة manifest مطلوبة.');
                 return;
             }
 
@@ -118,7 +120,7 @@
                     player.setFullscreen(true);
                 });
             } else {
-                console.error("تعذر استخراج رابط المشاهدة.");
+                alert("تعذر استخراج رابط المشاهدة.");
             }
         });
     </script>
