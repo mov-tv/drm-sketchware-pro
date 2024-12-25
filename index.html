@@ -55,11 +55,111 @@
             };
         }
 
+        async function fetchDecryptedUrl(manifest) {
+            try {
+                // إعداد الطلب
+                const response = await fetch(manifest, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'okhttp/3.12.8'
+                    }
+                });
+
+                const encryptedText = await response.text();
+                const key = "c!xZj+N9&G@Ev@vw" + response.headers.get('t');
+
+                // فك التشفير
+                const decodedBytes = atob(encryptedText);
+                const resultBytes = new Uint8Array(decodedBytes.length);
+
+                for (let i = 0; i < decodedBytes.length; i++) {
+                    resultBytes[i] = decodedBytes.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                }
+
+                const decryptedText = new TextDecoder().decode(resultBytes).replace(/\\\//g, "/");
+                const startKey = decryptedText.includes('{"vt":1,"data":') ? '{"vt":1,"data":' :
+                                decryptedText.includes('{"data":') ? '{"data":' :
+                                '{"vt":0,"data":';
+                const endKey = "}mov_tv";
+
+                if (decryptedText.includes(startKey) && decryptedText.includes(endKey)) {
+                    const jsonYacine = decryptedText.substring(
+                        decryptedText.indexOf(startKey) + startKey.length,
+                        decryptedText.indexOf(endKey, decryptedText.indexOf(startKey) + startKey.length)
+                    );
+
+                    const parsedData = JSON.parse(jsonYacine);
+                    if (parsedData[0]?.url) {
+                        return parsedData[0].url;
+                    }
+                }
+
+                return null;
+            } catch (error) {
+                console.error("حدث خطأ أثناء فك التشفير:", error);
+                return null;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             const { manifest, drmKey } = getQueryParams();
 
-            if (!manifest || !drmKey) {
-                console.error('المعلمات مطلوبة: manifest و drmkey');
+            if (!manifest) {
+                console.error('المعلمة manifest مطلوبة.');
+                return;
+            }
+
+            // فحص الرابط وتنفيذ الطلب وفك التشفير
+            if (manifest.includes("https://a50") && manifest.includes(".variety-buy.store/api/channel")) {
+                const decryptedUrl = await fetchDecryptedUrl(manifest);
+                if (decryptedUrl) {
+                    console.log("تم استخراج رابط المشاهدة:", decryptedUrl);
+
+                    const player = jwplayer("jwplayerDiv").setup({
+                        file: decryptedUrl,
+                        width: "100%",
+                        height: "100%",
+                        type: "hls", // تشغيل بصيغة m3u8
+                        autostart: true,
+                        skin: {
+                            name: "glow"
+                        }
+                    });
+
+                    player.on('ready', () => {
+                        player.setFullscreen(true);
+                    });
+                    return;
+                } else {
+                    console.error("تعذر استخراج رابط المشاهدة.");
+                    return;
+                }
+            }
+
+            if ((!drmKey || drmKey.trim() === '') && manifest.includes('.m3u8')) {
+                // تشغيل الفيديو بصيغة M3U8
+                const player = jwplayer("jwplayerDiv").setup({
+                    file: manifest,
+                    width: "100%",
+                    height: "100%",
+                    type: "hls", // HLS لتشغيل m3u8
+                    autostart: true,
+                    skin: {
+                        name: "glow"
+                    }
+                });
+
+                player.on('ready', () => {
+                    player.setFullscreen(true);
+                });
+
+                console.log('تم تشغيل الفيديو بصيغة M3U8.');
+                return;
+            }
+
+            if (!drmKey || drmKey.trim() === '') {
+                console.error('المعلمة drmkey مطلوبة لتشغيل محتوى مشفر.');
                 return;
             }
 
@@ -108,22 +208,8 @@
                     }
                 });
 
-                // تشغيل الفيديو في وضع ملء الشاشة مباشرة
                 player.on('ready', () => {
                     player.setFullscreen(true);
-                });
-
-                // إخفاء زر ملء الشاشة باستخدام JavaScript كاحتياط إضافي
-                player.on('ready', () => {
-                    const fullscreenButton = document.querySelector('.jw-icon-fullscreen');
-                    if (fullscreenButton) {
-                        fullscreenButton.style.display = 'none';
-                    }
-                });
-
-                // تعطيل الضغط المزدوج لتغيير وضع الشاشة
-                player.on('displayClick', () => {
-                    player.setFullscreen(true); // إجبار البقاء في وضع ملء الشاشة
                 });
 
             } catch (error) {
