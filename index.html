@@ -5,10 +5,6 @@
     <title>Shaka Player with JW Design</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.compiled.js"></script>
     <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
-
-    <!-- إضافة Vercel Analytics -->
-    <script src="https://analytics.vercel.app/js/analytics.js"></script>
-
     <style>
         body {
             margin: 0;
@@ -58,34 +54,8 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const { manifest, drmKey } = getQueryParams();
 
-            if (!manifest) {
-                console.error('المعلمة manifest مطلوبة.');
-                return;
-            }
-
-            if ((!drmKey || drmKey.trim() === '') && manifest.includes('.m3u8')) {
-                // تشغيل الفيديو بصيغة M3U8
-                const player = jwplayer("jwplayerDiv").setup({
-                    file: manifest,
-                    width: "100%",
-                    height: "100%",
-                    type: "hls", // HLS لتشغيل m3u8
-                    autostart: true,
-                    skin: {
-                        name: "glow"
-                    }
-                });
-
-                player.on('ready', () => {
-                    player.setFullscreen(true);
-                });
-
-                console.log('تم تشغيل الفيديو بصيغة M3U8.');
-                return;
-            }
-
-            if (!drmKey || drmKey.trim() === '') {
-                console.error('المعلمة drmkey مطلوبة لتشغيل محتوى مشفر.');
+            if (!manifest || !drmKey) {
+                console.error('المعلمات مطلوبة: manifest و drmkey');
                 return;
             }
 
@@ -134,8 +104,22 @@
                     }
                 });
 
+                // تشغيل الفيديو في وضع ملء الشاشة مباشرة
                 player.on('ready', () => {
                     player.setFullscreen(true);
+                });
+
+                // إخفاء زر ملء الشاشة باستخدام JavaScript كاحتياط إضافي
+                player.on('ready', () => {
+                    const fullscreenButton = document.querySelector('.jw-icon-fullscreen');
+                    if (fullscreenButton) {
+                        fullscreenButton.style.display = 'none';
+                    }
+                });
+
+                // تعطيل الضغط المزدوج لتغيير وضع الشاشة
+                player.on('displayClick', () => {
+                    player.setFullscreen(true); // إجبار البقاء في وضع ملء الشاشة
                 });
 
             } catch (error) {
