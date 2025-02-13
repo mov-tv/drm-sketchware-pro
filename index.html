@@ -2,9 +2,8 @@
 <html>
 <head>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <title>Shaka Player with JW Design</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.compiled.js"></script>
-    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+    <title>JW Player with Dual Support</title>
+    <script src="https://cdn.jwplayer.com/libraries/YOUR_LICENSE_KEY.js"></script>
     <style>
         body {
             margin: 0;
@@ -30,7 +29,6 @@
             height: 100%;
         }
 
-        /* إخفاء زر ملء الشاشة باستخدام CSS */
         .jw-icon-fullscreen {
             display: none !important;
         }
@@ -42,89 +40,77 @@
     </div>
 
     <script>
-        // دالة لاستخراج المعلمات من الرابط
         function getQueryParams() {
             const params = new URLSearchParams(window.location.search);
             return {
                 manifest: params.get('manifest'),
+                m3u8: params.get('m3u8'),
                 drmKey: params.get('drmkey')
             };
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const { manifest, drmKey } = getQueryParams();
-
-            if (!manifest || !drmKey) {
-                console.error('المعلمات مطلوبة: manifest و drmkey');
+        document.addEventListener('DOMContentLoaded', () => {
+            const { manifest, m3u8, drmKey } = getQueryParams();
+            
+            if (!manifest && !m3u8) {
+                console.error('يجب توفير معلمة manifest أو m3u8');
                 return;
             }
 
-            const [keyId, keyValue] = drmKey.split(':');
-            if (!keyId || !keyValue) {
-                console.error('صيغة drmkey غير صحيحة. يجب أن تكون على الشكل keyId:keyValue');
-                return;
+            let playerConfig = {
+                width: "100%",
+                height: "100%",
+                autostart: true,
+                skin: { name: "glow" }
+            };
+
+            // حالة تشغيل HLS عادي
+            if (m3u8) {
+                playerConfig = {
+                    ...playerConfig,
+                    file: m3u8,
+                    type: 'hls'
+                };
             }
-
-            // تشغيل الفيديو باستخدام Shaka Player
-            const videoContainer = document.createElement('video');
-            videoContainer.controls = true;
-            videoContainer.style.display = 'none'; // إخفاء الفيديو لتجنب تداخل التصميم
-
-            document.body.appendChild(videoContainer);
-
-            const shakaPlayer = new shaka.Player(videoContainer);
-
-            shakaPlayer.configure({
-                drm: {
-                    clearKeys: {
-                        [keyId]: keyValue
-                    }
+            // حالة تشغيل DASH مع DRM
+            else if (manifest && drmKey) {
+                const [keyId, keyValue] = drmKey.split(':');
+                if (!keyId || !keyValue) {
+                    console.error('صيغة drmkey غير صحيحة');
+                    return;
                 }
-            });
 
-            try {
-                await shakaPlayer.load(manifest);
-                console.log('تم تحميل الفيديو المحمي بـ DRM بنجاح.');
-
-                // إعداد تصميم JW Player
-                const player = jwplayer("jwplayerDiv").setup({
+                playerConfig = {
+                    ...playerConfig,
                     file: manifest,
-                    width: "100%",
-                    height: "100%",
-                    type: "dash",
-                    autostart: true,
+                    type: 'dash',
                     drm: {
                         clearkey: {
                             keyId: keyId,
                             key: keyValue
                         }
-                    },
-                    skin: {
-                        name: "glow"
                     }
-                });
-
-                // تشغيل الفيديو في وضع ملء الشاشة مباشرة
-                player.on('ready', () => {
-                    player.setFullscreen(true);
-                });
-
-                // إخفاء زر ملء الشاشة باستخدام JavaScript كاحتياط إضافي
-                player.on('ready', () => {
-                    const fullscreenButton = document.querySelector('.jw-icon-fullscreen');
-                    if (fullscreenButton) {
-                        fullscreenButton.style.display = 'none';
-                    }
-                });
-
-                // تعطيل الضغط المزدوج لتغيير وضع الشاشة
-                player.on('displayClick', () => {
-                    player.setFullscreen(true); // إجبار البقاء في وضع ملء الشاشة
-                });
-
-            } catch (error) {
-                console.error('حدث خطأ أثناء تحميل الفيديو:', error);
+                };
             }
+
+            // تهيئة المشغل
+            const player = jwplayer("jwplayerDiv").setup(playerConfig);
+
+            // إعدادات ملء الشاشة
+            player.on('ready', () => {
+                player.setFullscreen(true);
+                
+                // إخفاء زر الملء التلقائي
+                const fullscreenBtn = document.querySelector('.jw-icon-fullscreen');
+                if (fullscreenBtn) fullscreenBtn.style.display = 'none';
+            });
+
+            // منع الخروج من ملء الشاشة
+            player.on('displayClick', () => {
+                if (!player.getFullscreen()) {
+                    player.setFullscreen(true);
+                }
+            });
         });
     </script>
 </body>
