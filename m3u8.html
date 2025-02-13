@@ -1,91 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
-    <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <title>JW Player with M3U8</title>
-    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        #video-container {
-            width: 80%;
-            max-width: 1280px;
-            aspect-ratio: 16 / 9;
-            background: #000;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
-        }
-
-        #jwplayerDiv {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* إخفاء زر ملء الشاشة باستخدام CSS */
-        .jw-icon-fullscreen {
-            display: none !important;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشغل فيديو JW Player</title>
+    <!-- إضافة JW Player CSS -->
+    <link rel="stylesheet" href="https://cdn.jwplayer.com/libraries/8.x.x/jwplayer.css">
 </head>
 <body>
-    <div id="video-container">
-        <div id="jwplayerDiv"></div>
-    </div>
+    <div id="myElement">جارٍ التحميل...</div>
+
+    <!-- إضافة JW Player Script -->
+    <script src="https://cdn.jwplayer.com/libraries/8.x.x/jwplayer.js"></script>
 
     <script>
-        // دالة لاستخراج رابط m3u8 من الرابط
-        function getQueryParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                m3u8: params.get('m3u8')
-            };
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const { m3u8 } = getQueryParams();
-
-            if (!m3u8) {
-                console.error('الرابط مطلوب: m3u8');
-                return;
-            }
-
-            // إعداد JW Player
-            const player = jwplayer("jwplayerDiv").setup({
-                file: m3u8, // تمرير رابط m3u8 هنا
-                width: "100%",
-                height: "100%",
-                type: "hls", // تحديد نوع الفيديو كـ HLS
-                autostart: true, // التشغيل التلقائي
-                skin: {
-                    name: "glow" // استخدام تصميم JW Player
-                }
-            });
-
-            // تشغيل الفيديو في وضع ملء الشاشة مباشرة
-            player.on('ready', () => {
-                player.setFullscreen(true);
-            });
-
-            // إخفاء زر ملء الشاشة باستخدام JavaScript كاحتياط إضافي
-            player.on('ready', () => {
-                const fullscreenButton = document.querySelector('.jw-icon-fullscreen');
-                if (fullscreenButton) {
-                    fullscreenButton.style.display = 'none';
-                }
-            });
-
-            // تعطيل الضغط المزدوج لتغيير وضع الشاشة
-            player.on('displayClick', () => {
-                player.setFullscreen(true); // إجبار البقاء في وضع ملء الشاشة
-            });
+        // تهيئة JW Player
+        jwplayer("myElement").setup({
+            file: "http://bdd78.4rouwanda-shop.store/live/918454578001/index.m3u8?t=pZNkA3CQoHeXThEVnLUJmw&e=1739483343", // رابط الفيديو
+            width: "100%", // عرض المشغل
+            aspectratio: "16:9", // نسبة العرض إلى الارتفاع
+            autostart: true, // التشغيل التلقائي
+            mute: false, // إلغاء كتم الصوت
+            primary: "html5", // استخدام HTML5 كخيار رئيسي
         });
     </script>
 </body>
