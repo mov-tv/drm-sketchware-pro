@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content="width=device-width, initial-scale=1" name="viewport"/>
+    <title>JW Player with M3U8</title>
+    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #video-container {
+            width: 80%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        #jwplayerDiv {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* إخفاء زر ملء الشاشة باستخدام CSS */
+        .jw-icon-fullscreen {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <div id="jwplayerDiv"></div>
+    </div>
+
+    <script>
+        // دالة لاستخراج رابط m3u8 من الرابط
+        function getQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                m3u8: params.get('m3u8')
+            };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const { m3u8 } = getQueryParams();
+
+            if (!m3u8) {
+                console.error('الرابط مطلوب: m3u8');
+                return;
+            }
+
+            // إعداد JW Player
+            const player = jwplayer("jwplayerDiv").setup({
+                file: m3u8, // تمرير رابط m3u8 هنا
+                width: "100%",
+                height: "100%",
+                type: "hls", // تحديد نوع الفيديو كـ HLS
+                autostart: true, // التشغيل التلقائي
+                skin: {
+                    name: "glow" // استخدام تصميم JW Player
+                }
+            });
+
+            // تشغيل الفيديو في وضع ملء الشاشة مباشرة
+            player.on('ready', () => {
+                player.setFullscreen(true);
+            });
+
+            // إخفاء زر ملء الشاشة باستخدام JavaScript كاحتياط إضافي
+            player.on('ready', () => {
+                const fullscreenButton = document.querySelector('.jw-icon-fullscreen');
+                if (fullscreenButton) {
+                    fullscreenButton.style.display = 'none';
+                }
+            });
+
+            // تعطيل الضغط المزدوج لتغيير وضع الشاشة
+            player.on('displayClick', () => {
+                player.setFullscreen(true); // إجبار البقاء في وضع ملء الشاشة
+            });
+        });
+    </script>
+</body>
+</html>
