@@ -3,8 +3,7 @@
 <head>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
     <title>Player</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.compiled.js"></script>
-    <!-- تم تحديث سطر المكتبة بإضافة المفتاح الخاص -->
+    <!-- مكتبة JW Player مع المفتاح الخاص -->
     <script src="https://cdn.jwplayer.com/libraries/XSuP4qMl+9tK17QNb+4+th2Pm9AWgMO/cYH8CI0HGGr7bdjo.js"></script>
     <style>
         body {
@@ -45,81 +44,41 @@
         function getQueryParams() {
             const params = new URLSearchParams(window.location.search);
             return {
-                manifest: params.get('manifest'),
-                m3u8: params.get('m3u8'),
-                drmKey: params.get('drmkey')
+                m3u8: params.get('m3u8') // استخراج رابط m3u8 فقط
             };
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const { manifest, m3u8, drmKey } = getQueryParams();
+        document.addEventListener('DOMContentLoaded', () => {
+            const { m3u8 } = getQueryParams();
 
-            // حالة التشغيل العادي لـ HLS
-            if (m3u8) {
-                jwplayer("jwplayerDiv").setup({
-                    file: m3u8,
-                    width: "100%",
-                    height: "100%",
-                    autostart: true,
-                });
+            if (!m3u8) {
+                console.error('يجب توفير معلمة m3u8 في الرابط');
                 return;
             }
 
-            // حالة التشغيل مع DRM
-            if (!manifest || !drmKey) {
-                console.error('المعلمات مطلوبة: manifest و drmkey');
-                return;
-            }
-
-            const [keyId, keyValue] = drmKey.split(':');
-            if (!keyId || !keyValue) {
-                console.error('صيغة drmkey غير صحيحة. يجب أن تكون على الشكل keyId:keyValue');
-                return;
-            }
-
-            const videoContainer = document.createElement('video');
-            videoContainer.controls = true;
-            videoContainer.style.display = 'none';
-            document.body.appendChild(videoContainer);
-
-            const shakaPlayer = new shaka.Player(videoContainer);
-            shakaPlayer.configure({
-                drm: {
-                    clearKeys: {
-                        [keyId]: keyValue
-                    }
-                }
+            // تهيئة JW Player لتشغيل ملف HLS
+            const player = jwplayer("jwplayerDiv").setup({
+                file: m3u8,
+                width: "100%",
+                height: "100%",
+                autostart: true,
             });
 
-            try {
-                await shakaPlayer.load(manifest);
+            // إعدادات ملء الشاشة
+            player.on('ready', () => {
+                player.setFullscreen(true);
                 
-                const player = jwplayer("jwplayerDiv").setup({
-                    file: manifest,
-                    width: "100%",
-                    height: "100%",
-                    type: "dash",
-                    autostart: true,
-                    drm: {
-                        clearkey: {
-                            keyId: keyId,
-                            key: keyValue
-                        }
-                    }
-                });
+                // إخفاء زر الملء التلقائي
+                const fullscreenBtn = document.querySelector('.jw-icon-fullscreen');
+                if (fullscreenBtn) fullscreenBtn.style.display = 'none';
+            });
 
-                player.on('ready', () => {
+            // منع الخروج من ملء الشاشة
+            player.on('displayClick', () => {
+                if (!player.getFullscreen()) {
                     player.setFullscreen(true);
-                    document.querySelector('.jw-icon-fullscreen').style.display = 'none';
-                });
-
-                player.on('displayClick', () => {
-                    player.setFullscreen(true);
-                });
-
-            } catch (error) {
-                console.error('حدث خطأ:', error);
-            }
+                }
+            });
         });
     </script>
 </body>
