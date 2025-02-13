@@ -2,8 +2,9 @@
 <html>
 <head>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <title>JW Player with Dual Support</title>
-    <script src="https://cdn.jwplayer.com/libraries/YOUR_LICENSE_KEY.js"></script>
+    <title>Player</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.1/shaka-player.compiled.js"></script>
+    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
     <style>
         body {
             margin: 0;
@@ -49,68 +50,75 @@
             };
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const { manifest, m3u8, drmKey } = getQueryParams();
-            
-            if (!manifest && !m3u8) {
-                console.error('يجب توفير معلمة manifest أو m3u8');
+
+            // حالة التشغيل العادي لـ HLS
+            if (m3u8) {
+                jwplayer("jwplayerDiv").setup({
+                    file: m3u8,
+                    width: "100%",
+                    height: "100%",
+                    autostart: true,
+                });
                 return;
             }
 
-            let playerConfig = {
-                width: "100%",
-                height: "100%",
-                autostart: true,
-                skin: { name: "glow" }
-            };
-
-            // حالة تشغيل HLS عادي
-            if (m3u8) {
-                playerConfig = {
-                    ...playerConfig,
-                    file: m3u8,
-                    type: 'hls'
-                };
+            // حالة التشغيل مع DRM
+            if (!manifest || !drmKey) {
+                console.error('المعلمات مطلوبة: manifest و drmkey');
+                return;
             }
-            // حالة تشغيل DASH مع DRM
-            else if (manifest && drmKey) {
-                const [keyId, keyValue] = drmKey.split(':');
-                if (!keyId || !keyValue) {
-                    console.error('صيغة drmkey غير صحيحة');
-                    return;
-                }
 
-                playerConfig = {
-                    ...playerConfig,
+            const [keyId, keyValue] = drmKey.split(':');
+            if (!keyId || !keyValue) {
+                console.error('صيغة drmkey غير صحيحة. يجب أن تكون على الشكل keyId:keyValue');
+                return;
+            }
+
+            const videoContainer = document.createElement('video');
+            videoContainer.controls = true;
+            videoContainer.style.display = 'none';
+            document.body.appendChild(videoContainer);
+
+            const shakaPlayer = new shaka.Player(videoContainer);
+            shakaPlayer.configure({
+                drm: {
+                    clearKeys: {
+                        [keyId]: keyValue
+                    }
+                }
+            });
+
+            try {
+                await shakaPlayer.load(manifest);
+                
+                const player = jwplayer("jwplayerDiv").setup({
                     file: manifest,
-                    type: 'dash',
+                    width: "100%",
+                    height: "100%",
+                    type: "dash",
+                    autostart: true,
                     drm: {
                         clearkey: {
                             keyId: keyId,
                             key: keyValue
                         }
                     }
-                };
-            }
+                });
 
-            // تهيئة المشغل
-            const player = jwplayer("jwplayerDiv").setup(playerConfig);
-
-            // إعدادات ملء الشاشة
-            player.on('ready', () => {
-                player.setFullscreen(true);
-                
-                // إخفاء زر الملء التلقائي
-                const fullscreenBtn = document.querySelector('.jw-icon-fullscreen');
-                if (fullscreenBtn) fullscreenBtn.style.display = 'none';
-            });
-
-            // منع الخروج من ملء الشاشة
-            player.on('displayClick', () => {
-                if (!player.getFullscreen()) {
+                player.on('ready', () => {
                     player.setFullscreen(true);
-                }
-            });
+                    document.querySelector('.jw-icon-fullscreen').style.display = 'none';
+                });
+
+                player.on('displayClick', () => {
+                    player.setFullscreen(true);
+                });
+
+            } catch (error) {
+                console.error('حدث خطأ:', error);
+            }
         });
     </script>
 </body>
