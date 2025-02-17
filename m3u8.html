@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>يلا كورة 24</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
+    <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,257 +19,67 @@
             height: 100vh;
             overflow: hidden;
         }
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 500px;
-            background: #000;
+        #player-container {
+            width: 80%;
+            max-width: 800px;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        video {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-        .controls {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-            padding: 0px;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: opacity 0.3s ease;
-        }
-        .controls.hide {
-            opacity: 0;
-        }
-        .controls button, .controls select {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: none;
-            padding: 9px -1px;
-            margin: 0 2px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background 0.3s ease;
-        }
-        .controls button:hover, .controls select:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .controls button i {
-            font-size: 18px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.2);
-            position: relative;
-            margin: 10px 0;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .progress-bar .progress {
-            height: 100%;
-            background: #ff4757;
-            width: 0;
-            border-radius: 5px;
-            transition: width 0.1s ease;
-        }
-        .ad-text {
-            font-family: 'Cairo', sans-serif;
-            font-size: 12px;
-            color: #fff;
-            text-align: center;
-            width: 100%;
-            margin-bottom: 10px;
-            position: absolute;
-            top: -25px;
-            left: 0;
-            opacity: 0.8;
-            transition: opacity 0.3s ease;
-        }
-        .ad-text:hover {
-            opacity: 1;
-        }
-        .live-text {
-            color: red;
-            font-weight: bold;
-            margin: 0 10px;
-        }
-        .quality-menu, .settings-menu {
-            position: relative;
-            left: -20px;
-        }
-        .quality-menu ul, .settings-menu ul {
-            display: none;
-            position: absolute;
-            bottom: 30px;
-            background: rgba(0, 0, 0, 0.8);
-            list-style: none;
-            padding: 7px;
-            margin: 0;
-            border-radius: 3px;
-        }
-        .quality-menu:hover ul, .settings-menu:hover ul {
-            display: block;
-        }
-        .quality-menu ul li, .settings-menu ul li {
-            padding: 5px 9px;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: background 0.3s ease;
-        }
-        .quality-menu ul li:hover, .settings-menu ul li:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        .fullscreen-btn {
-            margin-left: auto;
-        }
-        .notification {
-            position: fixed;
-            top: 350px;
-            right: 20px;
-            background-color: #1a1a1a;
-            color: #fff;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-            z-index: 1000;
-            transform: translateX(120%);
-            transition: transform 0.5s ease;
-        }
-        .notification.show {
-            transform: translateX(0);
-        }
-        .close-btn {
-            position: absolute;
-            top: 5px;
-            right: 10px;
-            font-size: 20px;
-            cursor: pointer;
-            color: #ff4757;
-        }
-        .close-btn:hover {
-            color: #fff;
+        #shaka-video {
+            display: none; /* إخفاء الفيديو الأصلي الخاص بـ Shaka */
         }
     </style>
 </head>
 <body>
-    <div class="video-container">
-        <video id="video" autoplay></video>
-        <div class="controls">
-            <button id="playPauseBtn"><i class="fas fa-play"></i></button>
-            <button id="muteBtn"><i class="fas fa-volume-up"></i></button>
-            <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
-            <div class="progress-bar">
-                <div class="progress"></div>
-            </div>
-            <div class="ad-text">شاهد جميع المباريات على موقع يلا كورة 24</div>
-            <div class="live-text">مباشر</div>
-            <div class="quality-menu">
-                <button><i class="fas fa-cog"></i> الجودة</button>
-                <ul id="qualityList"></ul>
-            </div>
-           
-           
-           
-           
-           
-            <button id="fullscreenBtn" class="fullscreen-btn"><i class="fas fa-expand"></i></button>
-        </div>
+
+    <div id="player-container">
+        <video id="shaka-video" autoplay></video>
+        <div id="jwplayer-container"></div>
     </div>
 
-    <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
     <script>
         const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
 
-        function initPlayer() {
-            const video = document.getElementById('video');
+        function initShakaPlayer() {
+            const video = document.getElementById('shaka-video');
             const player = new shaka.Player(video);
-
 
             player.load(videoUrl).then(() => {
                 console.log('تم تحميل الفيديو بنجاح.');
-                updateQualityMenu(player);
-
-                video.play().then(() => {
-                    console.log('الفيديو يعمل تلقائيًا.');
-                }).catch((error) => {
-                    console.warn('لم يتمكن المتصفح من تشغيل الفيديو تلقائيًا:', error);
-                    alert('يرجى النقر على الصفحة لتشغيل الفيديو.');
-                });
+                initJWPlayer(video);
             }).catch((error) => {
                 console.error('حدث خطأ أثناء تحميل الفيديو:', error);
-                alert('حدث خطأ أثناء تحميل الفيديو. يرجى التحقق من الاتصال بالإنترنت.');
+            });
+        }
+
+        function initJWPlayer(videoElement) {
+            const jwPlayerInstance = jwplayer("jwplayer-container").setup({
+                width: "100%",
+                aspectratio: "16:9",
+                controls: true,
+                playbackRateControls: [0.5, 1, 1.5, 2]
             });
 
-            const playPauseBtn = document.getElementById('playPauseBtn');
-            playPauseBtn.addEventListener('click', () => {
-                if (video.paused) {
-                    video.play();
-                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                } else {
-                    video.pause();
-                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                }
-            });
-
-            const muteBtn = document.getElementById('muteBtn');
-            const volumeSlider = document.getElementById('volumeSlider');
-            muteBtn.addEventListener('click', () => {
-                video.muted = !video.muted;
-                muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-            });
-            volumeSlider.addEventListener('input', () => {
-                video.volume = volumeSlider.value;
-            });
-
-            const progressBar = document.querySelector('.progress-bar .progress');
-            video.addEventListener('timeupdate', () => {
-                const progress = (video.currentTime / video.duration) * 100;
-                progressBar.style.width = `${progress}%`;
-            });
-
-            const qualityList = document.getElementById('qualityList');
-            function updateQualityMenu(player) {
-                const tracks = player.getVariantTracks();
-                tracks.forEach(track => {
-                    if (track.height) {
-                        const li = document.createElement('li');
-                        li.textContent = `${track.height}p`;
-                        li.addEventListener('click', () => {
-                            player.selectVariantTrack(track, true);
-                        });
-                        qualityList.appendChild(li);
-                    }
-                });
-            }
-
-            document.getElementById('speed05x').addEventListener('click', () => video.playbackRate = 0.5);
-            document.getElementById('speed1x').addEventListener('click', () => video.playbackRate = 1);
-            document.getElementById('speed15x').addEventListener('click', () => video.playbackRate = 1.5);
-            document.getElementById('speed2x').addEventListener('click', () => video.playbackRate = 2);
-
-            // تكبير الشاشة
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            fullscreenBtn.addEventListener('click', () => {
+            // ربط تشغيل JW Player بفيديو Shaka
+            jwPlayerInstance.on('play', () => videoElement.play());
+            jwPlayerInstance.on('pause', () => videoElement.pause());
+            jwPlayerInstance.on('seek', (e) => videoElement.currentTime = e.offset);
+            jwPlayerInstance.on('volume', (e) => videoElement.volume = e.volume);
+            jwPlayerInstance.on('mute', (e) => videoElement.muted = e.mute);
+            jwPlayerInstance.on('fullscreen', () => {
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen();
                 } else {
                     document.exitFullscreen();
                 }
             });
+
+            console.log("JW Player جاهز.");
         }
-        document.addEventListener('DOMContentLoaded', initPlayer);
+
+        document.addEventListener('DOMContentLoaded', initShakaPlayer);
     </script>
+
 </body>
 </html>
