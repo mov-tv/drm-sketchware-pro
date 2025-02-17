@@ -3,11 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار Shaka Player</title>
+    <title>يلا كورة 24</title>
+    
+    <!-- مكتبة Shaka Player -->
     <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
+    
+    <!-- مكتبة JW Player -->
+    <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #player-container {
+            width: 80%;
+            max-width: 800px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        #shaka-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        #jwplayer-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none; /* يسمح لـ Shaka بالتحكم بالفيديو */
+        }
+    </style>
 </head>
 <body>
-    <video id="shaka-video" width="800" controls autoplay></video>
+
+    <div id="player-container">
+        <video id="shaka-video" autoplay></video>
+        <div id="jwplayer-container"></div>
+    </div>
 
     <script>
         const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
@@ -18,12 +70,39 @@
 
             player.load(videoUrl).then(() => {
                 console.log('تم تحميل الفيديو بنجاح.');
+                initJWPlayer(video);
             }).catch((error) => {
                 console.error('حدث خطأ أثناء تحميل الفيديو:', error);
             });
         }
 
+        function initJWPlayer(videoElement) {
+            const jwPlayerInstance = jwplayer("jwplayer-container").setup({
+                width: "100%",
+                aspectratio: "16:9",
+                controls: true,
+                playbackRateControls: [0.5, 1, 1.5, 2]
+            });
+
+            // جعل عناصر التحكم في JW Player تتحكم في فيديو Shaka
+            jwPlayerInstance.on('play', () => videoElement.play());
+            jwPlayerInstance.on('pause', () => videoElement.pause());
+            jwPlayerInstance.on('seek', (e) => videoElement.currentTime = e.offset);
+            jwPlayerInstance.on('volume', (e) => videoElement.volume = e.volume);
+            jwPlayerInstance.on('mute', (e) => videoElement.muted = e.mute);
+            jwPlayerInstance.on('fullscreen', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            console.log("تم إعداد JW Player كمظهر فقط.");
+        }
+
         document.addEventListener('DOMContentLoaded', initShakaPlayer);
     </script>
+
 </body>
 </html>
