@@ -1,198 +1,60 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>يلا كورة 24 - بث مباشر</title>
-    <!-- Shaka Player -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.5.2/shaka-player.ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.5.2/controls.min.css">
-    <!-- الخطوط العربية -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+    <title>يلا كورة 24</title>
+    <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
     <style>
-        /* تنسيقات JW Player المخصصة */
-        :root {
-            --jw-red: #FF0000;
-            --jw-dark: #1A1A1A;
-        }
-
-        #videoContainer {
-            max-width: 800px;
-            margin: 20px auto;
-            background: #000;
-            position: relative;
-            font-family: 'Cairo', sans-serif;
-        }
-
-        #video {
-            width: 100%;
-            height: 450px;
-        }
-
-        /* واجهة التحكم المخصصة */
-        .jw-controls {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-            padding: 15px;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 10px;
+            height: 100vh;
+            overflow: hidden;
         }
-
-        .jw-button {
-            background: none;
-            border: none;
-            color: #FFF;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 8px;
-        }
-
-        .jw-progress {
-            flex-grow: 1;
-            height: 4px;
-            background: rgba(255,255,255,0.3);
-            margin: 0 15px;
-            cursor: pointer;
-        }
-
-        .jw-progress-filled {
-            height: 100%;
-            background: var(--jw-red);
-            width: 30%;
-        }
-
-        .jw-time {
-            color: #FFF;
-            font-size: 14px;
-            min-width: 100px;
-        }
-
-        .jw-quality-menu {
-            position: relative;
-        }
-
-        .jw-quality-options {
-            display: none;
-            position: absolute;
-            bottom: 40px;
-            background: var(--jw-dark);
-            padding: 10px;
-            min-width: 120px;
-            border-radius: 4px;
-        }
-
-        .jw-quality-menu:hover .jw-quality-options {
-            display: block;
-        }
-
-        .jw-quality-option {
-            color: #FFF;
-            padding: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .jw-quality-option:hover {
-            background: rgba(255,255,255,0.1);
+        #player-container {
+            width: 80%;
+            max-width: 800px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
-    <div id="videoContainer">
-        <video id="video" autoplay></video>
-        <div class="jw-controls">
-            <button class="jw-button" id="playPauseBtn">▶</button>
-            <div class="jw-progress">
-                <div class="jw-progress-filled" id="progress"></div>
-            </div>
-            <div class="jw-time">
-                <span id="currentTime">00:00</span> / 
-                <span id="duration">00:00</span>
-            </div>
-            <div class="jw-quality-menu">
-                <button class="jw-button">⚙️</button>
-                <div class="jw-quality-options" id="qualityList"></div>
-            </div>
-            <button class="jw-button" id="fullscreenBtn">⛶</button>
-        </div>
+
+    <div id="player-container">
+        <div id="player"></div>
     </div>
 
     <script>
-        // تهيئة Shaka Player
-        const manifestUri = 'https://ibn-alsarma.live/b1.php/index.mpd';
+        const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
 
-        async function init() {
-            const video = document.getElementById('video');
-            const player = new shaka.Player(video);
+        const player = jwplayer("player").setup({
+            file: videoUrl,
+            type: "dash",
+            width: "100%",
+            aspectratio: "16:9",
+            autostart: true,
+            controls: true,
+            playbackRateControls: [0.5, 1, 1.5, 2],
+        });
 
-            // إعدادات DASH
-            player.configure({
-                drm: { 
-                    clearKeys: {} // تعطيل DRM
-                },
-                streaming: {
-                    bufferingGoal: 30
-                }
-            });
+        player.on('ready', function() {
+            console.log("JW Player جاهز");
+        });
 
-            try {
-                await player.load(manifestUri);
-                initControls(player);
-                video.play();
-            } catch (e) {
-                console.error('حدث خطأ:', e);
-                alert('تعذر تحميل البث المباشر!');
-            }
-        }
-
-        // وظائف التحكم
-        function initControls(player) {
-            // التشغيل/الإيقاف
-            document.getElementById('playPauseBtn').onclick = () => {
-                video.paused ? video.play() : video.pause();
-            };
-
-            // شريط التقدم
-            video.ontimeupdate = () => {
-                const progress = (video.currentTime / video.duration) * 100;
-                document.getElementById('progress').style.width = `${progress}%`;
-                document.getElementById('currentTime').textContent = formatTime(video.currentTime);
-                document.getElementById('duration').textContent = formatTime(video.duration);
-            };
-
-            // قائمة الجودة
-            const tracks = player.getVariantTracks();
-            const qualityList = document.getElementById('qualityList');
-            tracks.forEach(track => {
-                const option = document.createElement('div');
-                option.className = 'jw-quality-option';
-                option.textContent = `${track.height}p`;
-                option.onclick = () => player.selectVariantTrack(track);
-                qualityList.appendChild(option);
-            });
-
-            // التكبير
-            document.getElementById('fullscreenBtn').onclick = () => {
-                if (!document.fullscreenElement) {
-                    videoContainer.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
-            };
-        }
-
-        // تنسيق الوقت
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-        }
-
-        // بدء التشغيل عند تحميل الصفحة
-        window.addEventListener('load', init);
+        player.on('error', function(event) {
+            console.error("حدث خطأ أثناء تشغيل الفيديو:", event.message);
+            alert("تعذر تشغيل الفيديو، يرجى التحقق من الرابط.");
+        });
     </script>
+
 </body>
 </html>
