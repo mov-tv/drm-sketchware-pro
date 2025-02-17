@@ -32,25 +32,26 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             position: relative;
         }
-        video {
+        #shaka-video {
             width: 100%;
             height: 100%;
             display: block;
         }
-        #shaka-video {
+        #jwplayer-container {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
-        }
-        #jwplayer-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
             z-index: 2;
-            pointer-events: none; /* يسمح لـ Shaka بالتحكم بالفيديو */
+        }
+        /* إخفاء الفيديو الوهمي لـ JW Player */
+        #jwplayer-container video {
+            display: none !important;
+        }
+        /* تأكد من ظهور عناصر التحكم */
+        .jw-controls {
+            display: flex !important;
         }
     </style>
 </head>
@@ -78,18 +79,27 @@
 
         function initJWPlayer(videoElement) {
             const jwPlayerInstance = jwplayer("jwplayer-container").setup({
+                file: '//example.com/dummy.mp4', // مصدر وهمي
                 width: "100%",
                 aspectratio: "16:9",
                 controls: true,
-                playbackRateControls: [0.5, 1, 1.5, 2]
+                autostart: false, // عدم التشغيل التلقائي
+                playbackRateControls: [0.5, 1, 1.5, 2],
+                mute: true, // تجنب الصوت من الفيديو الوهمي
             });
 
-            // جعل عناصر التحكم في JW Player تتحكم في فيديو Shaka
+            // ربط الأحداث مع فيديو Shaka
             jwPlayerInstance.on('play', () => videoElement.play());
             jwPlayerInstance.on('pause', () => videoElement.pause());
-            jwPlayerInstance.on('seek', (e) => videoElement.currentTime = e.offset);
-            jwPlayerInstance.on('volume', (e) => videoElement.volume = e.volume);
-            jwPlayerInstance.on('mute', (e) => videoElement.muted = e.mute);
+            jwPlayerInstance.on('seek', (e) => {
+                videoElement.currentTime = e.offset;
+            });
+            jwPlayerInstance.on('volume', (e) => {
+                videoElement.volume = e.volume;
+            });
+            jwPlayerInstance.on('mute', (e) => {
+                videoElement.muted = e.mute;
+            });
             jwPlayerInstance.on('fullscreen', () => {
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen();
@@ -98,7 +108,12 @@
                 }
             });
 
-            console.log("تم إعداد JW Player كمظهر فقط.");
+            // تحديث حالة JW Player بناءً على فيديو Shaka
+            videoElement.addEventListener('play', () => jwPlayerInstance.play());
+            videoElement.addEventListener('pause', () => jwPlayerInstance.pause());
+            videoElement.addEventListener('timeupdate', () => {
+                jwPlayerInstance.seek(videoElement.currentTime);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', initShakaPlayer);
