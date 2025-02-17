@@ -1,81 +1,73 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>يلا كورة 24</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>يلا كورة 24 - بث مباشر</title>
+    <!-- Shaka Player -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.5.2/shaka-player.ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.5.2/controls.min.css">
+    <!-- الخطوط العربية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* JW Player Style Override */
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        /* تنسيقات JW Player المخصصة */
+        :root {
+            --jw-red: #FF0000;
+            --jw-dark: #1A1A1A;
         }
 
-        .jw-container {
-            position: relative;
-            width: 100%;
+        #videoContainer {
             max-width: 800px;
+            margin: 20px auto;
             background: #000;
+            position: relative;
+            font-family: 'Cairo', sans-serif;
         }
 
         #video {
             width: 100%;
-            height: auto;
+            height: 450px;
         }
 
+        /* واجهة التحكم المخصصة */
         .jw-controls {
             position: absolute;
             bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            padding: 15px;
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
-            transition: opacity 0.3s;
+            gap: 10px;
         }
 
         .jw-button {
             background: none;
             border: none;
-            color: #fff;
-            padding: 8px;
-            margin: 0 5px;
+            color: #FFF;
             cursor: pointer;
+            font-size: 18px;
+            padding: 8px;
         }
 
         .jw-progress {
-            flex: 1;
+            flex-grow: 1;
             height: 4px;
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255,255,255,0.3);
             margin: 0 15px;
             cursor: pointer;
         }
 
         .jw-progress-filled {
             height: 100%;
-            background: #f00;
-            width: 0;
-            transition: width 0.1s;
+            background: var(--jw-red);
+            width: 30%;
         }
 
         .jw-time {
-            color: #fff;
-            font-size: 13px;
-            margin: 0 10px;
-        }
-
-        .jw-right-controls {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
+            color: #FFF;
+            font-size: 14px;
+            min-width: 100px;
         }
 
         .jw-quality-menu {
@@ -85,11 +77,11 @@
         .jw-quality-options {
             display: none;
             position: absolute;
-            bottom: 35px;
-            right: 0;
-            background: rgba(0, 0, 0, 0.8);
+            bottom: 40px;
+            background: var(--jw-dark);
             padding: 10px;
-            min-width: 100px;
+            min-width: 120px;
+            border-radius: 4px;
         }
 
         .jw-quality-menu:hover .jw-quality-options {
@@ -97,144 +89,110 @@
         }
 
         .jw-quality-option {
-            color: #fff;
-            padding: 5px;
+            color: #FFF;
+            padding: 8px;
             cursor: pointer;
-            font-size: 14px;
+            transition: background 0.3s;
         }
 
         .jw-quality-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .jw-volume-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .jw-volume-slider {
-            width: 80px;
-            margin: 0 10px;
+            background: rgba(255,255,255,0.1);
         }
     </style>
 </head>
 <body>
-    <div class="jw-container">
+    <div id="videoContainer">
         <video id="video" autoplay></video>
         <div class="jw-controls">
-            <button class="jw-button" id="playPauseBtn">
-                <i class="fas fa-play"></i>
-            </button>
-            
+            <button class="jw-button" id="playPauseBtn">▶</button>
             <div class="jw-progress">
                 <div class="jw-progress-filled" id="progress"></div>
             </div>
-
             <div class="jw-time">
                 <span id="currentTime">00:00</span> / 
                 <span id="duration">00:00</span>
             </div>
-
-            <div class="jw-right-controls">
-                <div class="jw-volume-container">
-                    <button class="jw-button" id="muteBtn">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
-                    <input type="range" class="jw-volume-slider" 
-                           id="volumeSlider" min="0" max="1" step="0.1" value="1">
-                </div>
-
-                <div class="jw-quality-menu">
-                    <button class="jw-button">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                    <div class="jw-quality-options" id="qualityList"></div>
-                </div>
-
-                <button class="jw-button" id="fullscreenBtn">
-                    <i class="fas fa-expand"></i>
-                </button>
+            <div class="jw-quality-menu">
+                <button class="jw-button">⚙️</button>
+                <div class="jw-quality-options" id="qualityList"></div>
             </div>
+            <button class="jw-button" id="fullscreenBtn">⛶</button>
         </div>
     </div>
 
-    <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
     <script>
-        // Shaka Player Implementation
-        const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
-        const video = document.getElementById('video');
-        const player = new shaka.Player(video);
+        // تهيئة Shaka Player
+        const manifestUri = 'https://ibn-alsarma.live/b1.php/index.mpd';
 
-        // Initialize Player
-        function initPlayer() {
-            player.load(videoUrl).then(() => {
-                updateQualityMenu();
-                video.play();
-            }).catch(handleError);
-        }
+        async function init() {
+            const video = document.getElementById('video');
+            const player = new shaka.Player(video);
 
-        // Quality Selection
-        function updateQualityMenu() {
-            const qualityList = document.getElementById('qualityList');
-            qualityList.innerHTML = '';
-            
-            const tracks = player.getVariantTracks();
-            tracks.forEach(track => {
-                if (track.height) {
-                    const option = document.createElement('div');
-                    option.className = 'jw-quality-option';
-                    option.textContent = `${track.height}p`;
-                    option.onclick = () => player.selectVariantTrack(track);
-                    qualityList.appendChild(option);
+            // إعدادات DASH
+            player.configure({
+                drm: { 
+                    clearKeys: {} // تعطيل DRM
+                },
+                streaming: {
+                    bufferingGoal: 30
                 }
             });
-        }
 
-        // Player Controls
-        document.getElementById('playPauseBtn').onclick = () => {
-            video.paused ? video.play() : video.pause();
-        };
-
-        document.getElementById('muteBtn').onclick = () => {
-            video.muted = !video.muted;
-        };
-
-        document.getElementById('volumeSlider').oninput = (e) => {
-            video.volume = e.target.value;
-        };
-
-        // Progress Bar
-        video.ontimeupdate = () => {
-            const progress = (video.currentTime / video.duration) * 100;
-            document.getElementById('progress').style.width = `${progress}%`;
-            document.getElementById('currentTime').textContent = 
-                formatTime(video.currentTime);
-            document.getElementById('duration').textContent = 
-                formatTime(video.duration);
-        };
-
-        // Fullscreen
-        document.getElementById('fullscreenBtn').onclick = () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
+            try {
+                await player.load(manifestUri);
+                initControls(player);
+                video.play();
+            } catch (e) {
+                console.error('حدث خطأ:', e);
+                alert('تعذر تحميل البث المباشر!');
             }
-        };
+        }
 
-        // Helper Functions
+        // وظائف التحكم
+        function initControls(player) {
+            // التشغيل/الإيقاف
+            document.getElementById('playPauseBtn').onclick = () => {
+                video.paused ? video.play() : video.pause();
+            };
+
+            // شريط التقدم
+            video.ontimeupdate = () => {
+                const progress = (video.currentTime / video.duration) * 100;
+                document.getElementById('progress').style.width = `${progress}%`;
+                document.getElementById('currentTime').textContent = formatTime(video.currentTime);
+                document.getElementById('duration').textContent = formatTime(video.duration);
+            };
+
+            // قائمة الجودة
+            const tracks = player.getVariantTracks();
+            const qualityList = document.getElementById('qualityList');
+            tracks.forEach(track => {
+                const option = document.createElement('div');
+                option.className = 'jw-quality-option';
+                option.textContent = `${track.height}p`;
+                option.onclick = () => player.selectVariantTrack(track);
+                qualityList.appendChild(option);
+            });
+
+            // التكبير
+            document.getElementById('fullscreenBtn').onclick = () => {
+                if (!document.fullscreenElement) {
+                    videoContainer.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+        }
+
+        // تنسيق الوقت
         function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            seconds = Math.floor(seconds % 60);
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
 
-        function handleError(error) {
-            console.error('Error:', error);
-            alert('حدث خطأ في تحميل الفيديو. يرجى المحاولة لاحقًا.');
-        }
-
-        document.addEventListener('DOMContentLoaded', initPlayer);
+        // بدء التشغيل عند تحميل الصفحة
+        window.addEventListener('load', init);
     </script>
 </body>
 </html>
