@@ -3,40 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>يلا كورة 24</title>
+    <title>اختبار Shaka Player</title>
     <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
-    <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #000;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        #player-container {
-            width: 80%;
-            max-width: 800px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        #shaka-video {
-            display: none; /* إخفاء الفيديو الأصلي الخاص بـ Shaka */
-        }
-    </style>
 </head>
 <body>
-
-    <div id="player-container">
-        <video id="shaka-video" autoplay></video>
-        <div id="jwplayer-container"></div>
-    </div>
+    <video id="shaka-video" width="800" controls autoplay></video>
 
     <script>
         const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
@@ -47,39 +18,12 @@
 
             player.load(videoUrl).then(() => {
                 console.log('تم تحميل الفيديو بنجاح.');
-                initJWPlayer(video);
             }).catch((error) => {
                 console.error('حدث خطأ أثناء تحميل الفيديو:', error);
             });
         }
 
-        function initJWPlayer(videoElement) {
-            const jwPlayerInstance = jwplayer("jwplayer-container").setup({
-                width: "100%",
-                aspectratio: "16:9",
-                controls: true,
-                playbackRateControls: [0.5, 1, 1.5, 2]
-            });
-
-            // ربط تشغيل JW Player بفيديو Shaka
-            jwPlayerInstance.on('play', () => videoElement.play());
-            jwPlayerInstance.on('pause', () => videoElement.pause());
-            jwPlayerInstance.on('seek', (e) => videoElement.currentTime = e.offset);
-            jwPlayerInstance.on('volume', (e) => videoElement.volume = e.volume);
-            jwPlayerInstance.on('mute', (e) => videoElement.muted = e.mute);
-            jwPlayerInstance.on('fullscreen', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
-            });
-
-            console.log("JW Player جاهز.");
-        }
-
         document.addEventListener('DOMContentLoaded', initShakaPlayer);
     </script>
-
 </body>
 </html>
