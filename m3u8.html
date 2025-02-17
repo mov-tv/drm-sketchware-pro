@@ -44,6 +44,9 @@
             autostart: true,
             controls: true,
             playbackRateControls: [0.5, 1, 1.5, 2],
+            tracks: [
+                { file: "https://ibn-alsarma.live/b1.php/audio.mpd", label: "العربية", kind: "audio", "default": true }
+            ]
         });
 
         player.on('ready', function() {
