@@ -1,126 +1,240 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>alraqi-tv</title>
-    <link rel="icon" href="https://alraqi-tv.com/logo/alraqi-tv.png" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>يلا كورة 24</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
+        /* JW Player Style Override */
         body {
             margin: 0;
-            background-color: #000;
-            overflow: hidden;
+            padding: 0;
+            background: #000;
+            height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
 
-        #jwplayerDiv {
+        .jw-container {
+            position: relative;
             width: 100%;
-            height: 100%;
+            max-width: 800px;
+            background: #000;
         }
 
-        .controls {
+        #video {
+            width: 100%;
+            height: auto;
+        }
+
+        .jw-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            transition: opacity 0.3s;
         }
 
-        button {
-            background-color: #444;
-            color: white;
+        .jw-button {
+            background: none;
             border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
+            color: #fff;
+            padding: 8px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
+
+        .jw-progress {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 15px;
+            cursor: pointer;
+        }
+
+        .jw-progress-filled {
+            height: 100%;
+            background: #f00;
+            width: 0;
+            transition: width 0.1s;
+        }
+
+        .jw-time {
+            color: #fff;
+            font-size: 13px;
+            margin: 0 10px;
+        }
+
+        .jw-right-controls {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+
+        .jw-quality-menu {
+            position: relative;
+        }
+
+        .jw-quality-options {
+            display: none;
+            position: absolute;
+            bottom: 35px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            min-width: 100px;
+        }
+
+        .jw-quality-menu:hover .jw-quality-options {
+            display: block;
+        }
+
+        .jw-quality-option {
+            color: #fff;
+            padding: 5px;
             cursor: pointer;
             font-size: 14px;
         }
 
-        button:hover {
-            background-color: #666;
+        .jw-quality-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .jw-volume-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .jw-volume-slider {
+            width: 80px;
+            margin: 0 10px;
         }
     </style>
 </head>
 <body>
-    <div id="jwplayerDiv"></div>
-    <div class="controls">
-        <button onclick="setVideoMode('16:9')">16:9</button>
-        <button onclick="setVideoMode('4:3')">4:3</button>
-        <button onclick="setVideoMode('fit')">Fit Parent</button>
-        <button onclick="setVideoMode('fill')">Fill Parent</button>
-        <button onclick="setVideoMode('wrap')">Wrap Parent</button>
-        <button onclick="setVideoMode('match')">Match Parent</button>
+    <div class="jw-container">
+        <video id="video" autoplay></video>
+        <div class="jw-controls">
+            <button class="jw-button" id="playPauseBtn">
+                <i class="fas fa-play"></i>
+            </button>
+            
+            <div class="jw-progress">
+                <div class="jw-progress-filled" id="progress"></div>
+            </div>
+
+            <div class="jw-time">
+                <span id="currentTime">00:00</span> / 
+                <span id="duration">00:00</span>
+            </div>
+
+            <div class="jw-right-controls">
+                <div class="jw-volume-container">
+                    <button class="jw-button" id="muteBtn">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <input type="range" class="jw-volume-slider" 
+                           id="volumeSlider" min="0" max="1" step="0.1" value="1">
+                </div>
+
+                <div class="jw-quality-menu">
+                    <button class="jw-button">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <div class="jw-quality-options" id="qualityList"></div>
+                </div>
+
+                <button class="jw-button" id="fullscreenBtn">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
+    <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
     <script>
-        const config = {
-                file: "https://ssc-3-enc.edgenextcdn.net/out/v1/42e86125555242aaa2a12056832e7814/index.mpd",
-            drm: {
-                clearkey: {
-                    keyId: "7de5dd08ad8041d586c2f16ccc9490a1",
-                    key: "5e1503f3398b34f5099933fedab847ef"
+        // Shaka Player Implementation
+        const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
+        const video = document.getElementById('video');
+        const player = new shaka.Player(video);
+
+        // Initialize Player
+        function initPlayer() {
+            player.load(videoUrl).then(() => {
+                updateQualityMenu();
+                video.play();
+            }).catch(handleError);
+        }
+
+        // Quality Selection
+        function updateQualityMenu() {
+            const qualityList = document.getElementById('qualityList');
+            qualityList.innerHTML = '';
+            
+            const tracks = player.getVariantTracks();
+            tracks.forEach(track => {
+                if (track.height) {
+                    const option = document.createElement('div');
+                    option.className = 'jw-quality-option';
+                    option.textContent = `${track.height}p`;
+                    option.onclick = () => player.selectVariantTrack(track);
+                    qualityList.appendChild(option);
                 }
+            });
+        }
+
+        // Player Controls
+        document.getElementById('playPauseBtn').onclick = () => {
+            video.paused ? video.play() : video.pause();
+        };
+
+        document.getElementById('muteBtn').onclick = () => {
+            video.muted = !video.muted;
+        };
+
+        document.getElementById('volumeSlider').oninput = (e) => {
+            video.volume = e.target.value;
+        };
+
+        // Progress Bar
+        video.ontimeupdate = () => {
+            const progress = (video.currentTime / video.duration) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+            document.getElementById('currentTime').textContent = 
+                formatTime(video.currentTime);
+            document.getElementById('duration').textContent = 
+                formatTime(video.duration);
+        };
+
+        // Fullscreen
+        document.getElementById('fullscreenBtn').onclick = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
             }
         };
 
-        const player = jwplayer("jwplayerDiv").setup({
-            file: config.file,
-            autostart: true,
-            width: "100%",
-            height: "100%",
-            type: "dash",
-            drm: {
-                clearkey: {
-                    keyId: config.drm.clearkey.keyId,
-                    key: config.drm.clearkey.key
-                }
-            }
-        });
-
-        function setVideoMode(mode) {
-            const videoElement = document.querySelector("#jwplayerDiv video");
-            if (!videoElement) return;
-
-            const parent = document.getElementById("jwplayerDiv");
-            const parentWidth = parent.clientWidth;
-            const parentHeight = parent.clientHeight;
-
-            switch (mode) {
-                case "16:9":
-                    videoElement.style.width = `${parentWidth}px`;
-                    videoElement.style.height = `${(parentWidth / 16) * 9}px`;
-                    break;
-                case "4:3":
-                    videoElement.style.width = `${parentWidth}px`;
-                    videoElement.style.height = `${(parentWidth / 4) * 3}px`;
-                    break;
-                case "fit":
-                    videoElement.style.width = `${parentWidth}px`;
-                    videoElement.style.height = `${parentHeight}px`;
-                    videoElement.style.objectFit = "contain";
-                    break;
-                case "fill":
-                    videoElement.style.width = `${parentWidth}px`;
-                    videoElement.style.height = `${parentHeight}px`;
-                    videoElement.style.objectFit = "cover";
-                    break;
-                case "wrap":
-                    videoElement.style.width = "auto";
-                    videoElement.style.height = "auto";
-                    break;
-                case "match":
-                    videoElement.style.width = "100%";
-                    videoElement.style.height = "100%";
-                    videoElement.style.objectFit = "fill";
-                    break;
-                default:
-                    break;
-            }
+        // Helper Functions
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            seconds = Math.floor(seconds % 60);
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
+
+        function handleError(error) {
+            console.error('Error:', error);
+            alert('حدث خطأ في تحميل الفيديو. يرجى المحاولة لاحقًا.');
+        }
+
+        document.addEventListener('DOMContentLoaded', initPlayer);
     </script>
 </body>
 </html>
