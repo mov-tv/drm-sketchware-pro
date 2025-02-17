@@ -5,118 +5,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>يلا كورة 24</title>
     
-    <!-- مكتبة Shaka Player -->
+    <!-- Shaka Player -->
     <script src="https://shaka-player-demo.appspot.com/dist/shaka-player.ui.js"></script>
     
-    <!-- مكتبة JW Player -->
-    <script src="https://cdn.jwplayer.com/libraries/IDzF9Zmk.js"></script>
+    <!-- JW Player -->
+    <script src="//content.jwplatform.com/libraries/SAHhwvZq.js"></script>
     
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #000;
-            color: #fff;
+            background: #000;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
         }
-        #player-container {
-            width: 80%;
-            max-width: 800px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+        #player-wrapper {
+            width: 90%;
+            max-width: 1280px;
             position: relative;
+            aspect-ratio: 16/9;
         }
+
         #shaka-video {
             width: 100%;
             height: 100%;
-            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
-        #jwplayer-container {
+
+        #jw-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 2;
+            pointer-events: none;
         }
-        /* إخفاء الفيديو الوهمي لـ JW Player */
-        #jwplayer-container video {
+
+        /* إخفاء فيديو JW Player */
+        #jw-overlay video {
             display: none !important;
         }
-        /* تأكد من ظهور عناصر التحكم */
+
+        /* إظهار عناصر التحكم */
         .jw-controls {
-            display: flex !important;
+            pointer-events: all !important;
         }
     </style>
 </head>
 <body>
 
-    <div id="player-container">
+    <div id="player-wrapper">
         <video id="shaka-video" autoplay></video>
-        <div id="jwplayer-container"></div>
+        <div id="jw-overlay"></div>
     </div>
 
     <script>
-        const videoUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
+        const manifestUrl = 'https://ibn-alsarma.live/b1.php/index.mpd';
 
-        function initShakaPlayer() {
+        // تهيئة Shaka Player
+        async function initShaka() {
             const video = document.getElementById('shaka-video');
             const player = new shaka.Player(video);
 
-            player.load(videoUrl).then(() => {
-                console.log('تم تحميل الفيديو بنجاح.');
-                initJWPlayer(video);
-            }).catch((error) => {
-                console.error('حدث خطأ أثناء تحميل الفيديو:', error);
-            });
+            try {
+                await player.load(manifestUrl);
+                console.log('Shaka: تم التحميل بنجاح');
+                initJWInterface(video);
+            } catch (error) {
+                console.error('Shaka Error:', error);
+            }
         }
 
-        function initJWPlayer(videoElement) {
-            const jwPlayerInstance = jwplayer("jwplayer-container").setup({
-                file: '//example.com/dummy.mp4', // مصدر وهمي
+        // تهيئة واجهة JW Player
+        function initJWInterface(shakaVideo) {
+            const jwPlayer = jwplayer("jw-overlay").setup({
                 width: "100%",
                 aspectratio: "16:9",
                 controls: true,
-                autostart: false, // عدم التشغيل التلقائي
-                playbackRateControls: [0.5, 1, 1.5, 2],
-                mute: true, // تجنب الصوت من الفيديو الوهمي
+                autostart: false,
+                mute: false,
+                playbackRateControls: [0.5, 1, 1.5, 2]
             });
 
-            // ربط الأحداث مع فيديو Shaka
-            jwPlayerInstance.on('play', () => videoElement.play());
-            jwPlayerInstance.on('pause', () => videoElement.pause());
-            jwPlayerInstance.on('seek', (e) => {
-                videoElement.currentTime = e.offset;
+            // ربط الأحداث مع Shaka Player
+            jwPlayer.on('play', () => shakaVideo.play());
+            jwPlayer.on('pause', () => shakaVideo.pause());
+            jwPlayer.on('seek', (e) => {
+                shakaVideo.currentTime = e.offset;
             });
-            jwPlayerInstance.on('volume', (e) => {
-                videoElement.volume = e.volume;
+            jwPlayer.on('volume', (e) => {
+                shakaVideo.volume = e.volume;
             });
-            jwPlayerInstance.on('mute', (e) => {
-                videoElement.muted = e.mute;
-            });
-            jwPlayerInstance.on('fullscreen', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
+            jwPlayer.on('mute', (e) => {
+                shakaVideo.muted = e.mute;
             });
 
-            // تحديث حالة JW Player بناءً على فيديو Shaka
-            videoElement.addEventListener('play', () => jwPlayerInstance.play());
-            videoElement.addEventListener('pause', () => jwPlayerInstance.pause());
-            videoElement.addEventListener('timeupdate', () => {
-                jwPlayerInstance.seek(videoElement.currentTime);
+            // تحديث واجهة JW من أحداث Shaka
+            shakaVideo.addEventListener('timeupdate', () => {
+                jwPlayer.seek(shakaVideo.currentTime);
             });
+
+            shakaVideo.addEventListener('durationchange', () => {
+                jwPlayer.setDuration(shakaVideo.duration);
+            });
+
+            shakaVideo.addEventListener('volumechange', () => {
+                jwPlayer.setVolume(shakaVideo.volume);
+                jwPlayer.setMute(shakaVideo.muted);
+            });
+
+            // التحديث الأولي للحالة
+            jwPlayer.setDuration(shakaVideo.duration);
+            jwPlayer.setVolume(shakaVideo.volume);
         }
 
-        document.addEventListener('DOMContentLoaded', initShakaPlayer);
+        // بدء التشغيل عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', initShaka);
     </script>
 
 </body>
