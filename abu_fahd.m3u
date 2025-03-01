@@ -1,0 +1,6 @@
+#EXTINF:-1 tvg-id="telekomsport4.ro" group-title="EVENT TOD2" tvg-logo="http://138.199.27.237:8080/BEIN/BeinSports/Bein-sports.png",BEIN1#KODIPROP:inputstream.adaptive.manifest_type=hls
+#KODIPROP:inputstream.adaptive.stream_headers=X-App-Subscription-Type=""#KODIPROP:inputstream.adaptive.stream_headers=Authorization="Bearer "
+#KODIPROP:inputstream.adaptive.stream_headers=X-App-Device-Detector={"userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36","os":"Windows","browser":"Chrome","device":"Unknown","os_version":"windows-10","browser_version":"127.0.0.0","deviceType":"desktop","orientation":"landscape","isDesktop":true,"isTablet":false,"isMobile":false}#KODIPROP:inputstream.adaptive.stream_headers=X-App-User-Id=""
+#KODIPROP:inputstream.adaptive.stream_headers=X-App-Platform=Chrome/127.0.0.0#KODIPROP:inputstream.adaptive.stream_headers=X-App-Name"almanasa-web"
+#KODIPROP:inputstream.adaptive.stream_headers=Referer="https://tv.almanasa.tv/"#EXTVLCOPT:http-user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36
+https://livestream.almanasa.tv:8008/news/ch24/adaptive.m3u8
